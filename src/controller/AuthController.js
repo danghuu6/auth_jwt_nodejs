@@ -29,6 +29,18 @@ class AuthController {
         } catch (err) {
             res.status(400).send(err);
         }
+    };
+
+    async login (req, res) {
+        const user = await User.findOne({email: req.body.email});
+        if (!user) return res.status(422).send('Email or Password is not correct');
+
+        const checkPassword = await bcrypt.compare(req.body.password, user.password);
+
+        if (!checkPassword) return res.status(400).send('Email or Password is not correct');
+        
+        const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET, { expiresIn: 60 * 60 * 24 });
+        res.header('auth-token', token).send(token);
     }
 }
 
